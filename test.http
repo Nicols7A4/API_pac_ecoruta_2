@@ -1,11 +1,32 @@
-### 0. Healthcheck
-GET http://127.0.0.1:5000/
+# @url_dom_api = http://127.0.0.1:5000/
+# @url_dom_api = http://0.0.0.0:5000/
+@url_dom_api = https://api-pac-ecoruta-2.onrender.com/
+
+
+### 
+GET {{url_dom_api}}
+
+### 
+GET {{url_dom_api}}
+
 ###
-GET http://0.0.0.0:5000/
+# @name loginOperario
+POST {{url_dom_api}}api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "operario@ecoruta.pe",
+  "password": "Operario123"
+}
+
+### 0. Healthcheck
+GET {{url_dom_api}}
+###
+GET {{url_dom_api}}
 
 ### 1.1 Login Operario
 # @name loginOperario
-POST http://0.0.0.0:5000/api/auth/login
+POST {{url_dom_api}}api/auth/login
 Content-Type: application/json
 
 {
@@ -15,7 +36,7 @@ Content-Type: application/json
 
 ### 1.1 Login Operario
 # @name loginOperario
-POST http://127.0.0.1:5000/api/auth/login
+POST {{url_dom_api}}api/auth/login
 Content-Type: application/json
 
 {
@@ -25,7 +46,7 @@ Content-Type: application/json
 
 ### 1.2 Login Supervisor
 # @name loginSupervisor
-POST http://127.0.0.1:5000/api/auth/login
+POST {{url_dom_api}}api/auth/login
 Content-Type: application/json
 
 {
@@ -35,7 +56,7 @@ Content-Type: application/json
 
 ### 1.3 Login Fiscalizador
 # @name loginFiscalizador
-POST http://127.0.0.1:5000/api/auth/login
+POST {{url_dom_api}}api/auth/login
 Content-Type: application/json
 
 {
@@ -49,27 +70,27 @@ Content-Type: application/json
 @token_fisc = {{loginFiscalizador.response.body.data.token}}
 
 ### 2. Perfil Usuario
-GET http://127.0.0.1:8000/api/usuario/perfil
+GET {{url_dom_api}}api/usuario/perfil
 Authorization: Bearer {{token_op}}
 
 ### 3. Listar Rutas
-GET http://127.0.0.1:8000/api/rutas?fecha=2026-10-11
+GET {{url_dom_api}}api/rutas?fecha=2026-10-11
 Authorization: Bearer {{token_sup}}
 
 ### 4. Detalle de Ruta
-GET http://127.0.0.1:8000/api/rutas/2
+GET {{url_dom_api}}api/rutas/2
 Authorization: Bearer {{token_sup}}
 
 ### 5. Puntos de una Ruta
-GET http://127.0.0.1:8000/api/rutas/2/puntos
+GET {{url_dom_api}}api/rutas/2/puntos
 Authorization: Bearer {{token_op}}
 
 ### 6. Buscar Punto por QR
-GET http://127.0.0.1:8000/api/puntos/PTO-006?id_ruta=2
+GET {{url_dom_api}}api/puntos/PTO-006?id_ruta=2
 Authorization: Bearer {{token_op}}
 
 ### 7. Atender Punto (Transaccional)
-POST http://127.0.0.1:8000/api/ruta-puntos/6/atender
+POST {{url_dom_api}}api/ruta-puntos/6/atender
 Authorization: Bearer {{token_op}}
 Content-Type: application/json
 
@@ -83,7 +104,7 @@ Content-Type: application/json
 }
 
 ### 8. Registrar Incidencia
-POST http://127.0.0.1:8000/api/ruta-puntos/7/incidencias
+POST {{url_dom_api}}api/ruta-puntos/7/incidencias
 Authorization: Bearer {{token_op}}
 Content-Type: application/json
 
@@ -96,24 +117,24 @@ Content-Type: application/json
 }
 
 ### 8b. Validar Ruta Conforme
-POST http://127.0.0.1:8000/api/rutas/1/validar
+POST {{url_dom_api}}api/rutas/1/validar
 Authorization: Bearer {{token_fis}}
 Content-Type: application/json
 
 {"comentario": "Coordenadas, tiempos y evidencias conformes"}
 
 ### 9. Incidencias de una Ruta
-GET http://127.0.0.1:8000/api/rutas/2/incidencias
+GET {{url_dom_api}}api/rutas/2/incidencias
 Authorization: Bearer {{token_sup}}
 
 ### 10. Resumen de Supervisión (KPIs)
-GET http://127.0.0.1:8000/api/supervision/resumen?fecha=2026-10-11
+GET {{url_dom_api}}api/supervision/resumen?fecha=2026-10-11
 Authorization: Bearer {{token_sup}}
 
 ### 11. Operarios Disponibles
-GET http://127.0.0.1:8000/api/usuarios/operarios?fecha=2026-10-11&turno=MANANA
+GET {{url_dom_api}}api/usuarios/operarios?fecha=2026-10-11&turno=MANANA
 Authorization: Bearer {{token_sup}}
 
 ### 12. Vehículos Disponibles
-GET http://127.0.0.1:8000/api/vehiculos?estado=DISPONIBLE
+GET {{url_dom_api}}api/vehiculos?estado=DISPONIBLE
 Authorization: Bearer {{token_sup}}
