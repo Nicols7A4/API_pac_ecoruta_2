@@ -13,6 +13,39 @@ logger = logging.getLogger(__name__)
 class FcmService:
     _initialized = False
 
+    def enviar(self, token, titulo, mensaje, data):
+        data = {str(key): str(value) for key, value in data.items() if value is not None}
+        data["title"] = titulo
+        data["body"] = mensaje
+        if token.startswith(("ExponentPushToken[", "ExpoPushToken[")):
+            if Config.FCM_DRY_RUN:
+                raise ValueError("FCM_DRY_RUN no permite validar tokens Expo")
+            import requests
+            response = requests.post(
+                "https://exp.host/--/api/v2/push/send",
+                json={"to": token, "title": titulo, "body": mensaje, "data": data,
+                      "sound": "default", "priority": "high"},
+                timeout=8,
+            )
+            response.raise_for_status()
+            ticket = response.json().get("data", {})
+            if ticket.get("status") != "ok" or not ticket.get("id"):
+                raise ValueError(f"Expo rechazó la notificación: {ticket.get('message', 'respuesta inválida')}")
+            return ticket["id"]
+
+        from firebase_admin import messaging
+        message = messaging.Message(
+            token=token,
+            notification=messaging.Notification(title=titulo, body=mensaje),
+            data=data,
+            android=messaging.AndroidConfig(
+                priority="high",
+                ttl=timedelta(hours=6),
+                notification=messaging.AndroidNotification(channel_id="ecoruta_default"),
+            ),
+        )
+        return messaging.send(message, dry_run=Config.FCM_DRY_RUN)
+
     def _initialize(self):
         if self.__class__._initialized:
             return True
@@ -45,9 +78,11 @@ class FcmService:
             return False
 
     def despachar_pendientes(self, limite=20):
+        if Config.FCM_DRY_RUN:
+            logger.info("FCM_DRY_RUN activo: se conserva la cola de notificaciones.")
+            return 0
         if not self._initialize():
             return 0
-        from firebase_admin import messaging
         connection = get_connection()
         enviados = 0
         try:
@@ -63,33 +98,9 @@ class FcmService:
                         data.setdefault("id_incidencia", str(item["id_incidencia"]))
                     data.setdefault("title", "EcoRuta")
                     data.setdefault("body", str(item["mensaje"]))
-                    token = item["fcm_token"]
-                    if token.startswith("ExponentPushToken[") or token.startswith("ExpoPushToken["):
-                        import requests
-                        expo_payload = {
-                            "to": token,
-                            "title": data.get("title", "EcoRuta"),
-                            "body": data.get("body", str(item["mensaje"])),
-                            "data": data,
-                            "sound": "default",
-                            "priority": "high",
-                        }
-                        res = requests.post("https://exp.host/--/api/v2/push/send", json=expo_payload, timeout=8)
-                        res_json = res.json()
-                        message_id = str(res_json.get("data", {}).get("id", "EXPO_SENT"))
-                        repo.actualizar_resultado(item["id"], "ENVIADA", message_id)
-                        enviados += 1
-                        continue
-
-                    message = messaging.Message(
-                        token=token,
-                        data=data,
-                        android=messaging.AndroidConfig(
-                            priority="high",
-                            ttl=timedelta(hours=6),
-                        ),
+                    message_id = self.enviar(
+                        item["fcm_token"], data["title"], data["body"], data,
                     )
-                    message_id = messaging.send(message, dry_run=Config.FCM_DRY_RUN)
                     repo.actualizar_resultado(item["id"], "ENVIADA", message_id)
                     enviados += 1
                 except Exception as exc:
