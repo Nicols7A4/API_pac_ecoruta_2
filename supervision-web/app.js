@@ -78,15 +78,28 @@ async function api(path, options = {}) {
 
 // ================= AUTENTICACIÓN =================
 function checkSession() {
+  // Eliminar remanente de HTML antiguo si existiese en caché de Safari
+  const oldLogin = document.getElementById('login');
+  if (oldLogin) oldLogin.remove();
+
   const isAuth = Boolean(state.token && state.user && state.user.rol === 'SUPERVISOR');
-  $('#loginView').hidden = isAuth;
-  $('#appView').hidden = !isAuth;
-  $('#loginView').style.display = isAuth ? 'none' : 'grid';
-  $('#appView').style.display = isAuth ? 'block' : 'none';
+  const loginView = $('#loginView');
+  const appView = $('#appView');
+
+  if (loginView) {
+    loginView.hidden = isAuth;
+    loginView.style.display = isAuth ? 'none' : 'grid';
+  }
+  if (appView) {
+    appView.hidden = !isAuth;
+    appView.style.display = isAuth ? 'block' : 'none';
+  }
 
   if (isAuth) {
-    $('#userName').textContent = state.user.nombre || 'Supervisor';
-    $('#userInitial').textContent = (state.user.nombre || 'S').charAt(0).toUpperCase();
+    const userName = $('#userName');
+    const userInitial = $('#userInitial');
+    if (userName) userName.textContent = state.user.nombre || 'Supervisor';
+    if (userInitial) userInitial.textContent = (state.user.nombre || 'S').charAt(0).toUpperCase();
     startApp();
   } else {
     stopApp();
@@ -866,4 +879,8 @@ window.app = {
 };
 
 // Iniciar chequeo de sesión al cargar DOM
-document.addEventListener('DOMContentLoaded', checkSession);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', checkSession);
+} else {
+  checkSession();
+}

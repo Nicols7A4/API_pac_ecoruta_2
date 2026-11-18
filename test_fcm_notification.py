@@ -52,7 +52,7 @@ def probar_despacho_cola():
     logger.info("Notificaciones despachadas: %d", enviados)
     return enviados
 
-def enviar_notificacion_directa(token, titulo="EcoRuta Alerta", cuerpo="Prueba de notificación push desde backend"):
+def enviar_notificacion_directa(token, titulo="EcoRuta Alerta", cuerpo="Prueba de notificación push desde backend", tipo="PRUEBA", id_ruta="1", id_incidencia=None):
     logger.info("=== 4. Enviando notificación directa a token ===")
     service = FcmService()
     if not service._initialize():
@@ -60,24 +60,28 @@ def enviar_notificacion_directa(token, titulo="EcoRuta Alerta", cuerpo="Prueba d
         return False
     from firebase_admin import messaging
     try:
+        data_payload = {
+            "tipo": str(tipo),
+            "id_ruta": str(id_ruta),
+            "title": str(titulo),
+            "body": str(cuerpo),
+        }
+        if id_incidencia:
+            data_payload["id_incidencia"] = str(id_incidencia)
+
         msg = messaging.Message(
             token=token,
             notification=messaging.Notification(
                 title=titulo,
                 body=cuerpo,
             ),
-            data={
-                "tipo": "PRUEBA",
-                "id_ruta": "1",
-                "title": titulo,
-                "body": cuerpo,
-            },
+            data=data_payload,
             android=messaging.AndroidConfig(
                 priority="high"
             )
         )
         response = messaging.send(msg, dry_run=False)
-        logger.info("Mensaje enviado exitosamente a FCM! Message ID: %s", response)
+        logger.info("Mensaje enviado exitosamente a FCM! Message ID: %s (tipo=%s, id_incidencia=%s)", response, tipo, id_incidencia)
         return True
     except Exception as e:
         logger.error("Error al enviar mensaje FCM: %s (%s)", type(e).__name__, e)
@@ -87,19 +91,36 @@ if __name__ == "__main__":
     verificar_conexion_firebase()
     usuarios = listar_tokens_usuarios()
     
-    # Si se pasa un token por línea de comando:
+    # Parámetros por línea de comando: python test_fcm_notification.py [token] [tipo] [id_incidencia] [id_ruta]
     if len(sys.argv) > 1:
         token_arg = sys.argv[1]
-        enviar_notificacion_directa(token_arg)
+        tipo_arg = sys.argv[2] if len(sys.argv) > 2 else "INCIDENCIA_CRITICA"
+        id_inc_arg = sys.argv[3] if len(sys.argv) > 3 else "1"
+        id_ruta_arg = sys.argv[4] if len(sys.argv) > 4 else "1"
+        enviar_notificacion_directa(
+            token_arg,
+            titulo="🚨 Incidencia Crítica Reportada",
+            cuerpo="Se ha reportado una incidencia crítica en la ruta. Toca para ver el detalle.",
+            tipo=tipo_arg,
+            id_ruta=id_ruta_arg,
+            id_incidencia=id_inc_arg,
+        )
     else:
         # Verificar si algún usuario ya tiene token registrado
         con_token = [u for u in usuarios if u['fcm_token']]
         if con_token:
             for u in con_token:
                 logger.info("Enviando prueba al usuario %s...", u['nombre'])
-                enviar_notificacion_directa(u['fcm_token'], "EcoRuta: Ruta Asignada", f"Hola {u['nombre']}, tienes una nueva ruta asignada")
+                enviar_notificacion_directa(
+                    u['fcm_token'],
+                    "🚨 Incidencia Crítica Reportada",
+                    f"Alerta: Incidencia crítica en ruta para {u['nombre']}",
+                    tipo="INCIDENCIA_CRITICA",
+                    id_ruta="1",
+                    id_incidencia="1"
+                )
         else:
             logger.info("Ningún usuario tiene token FCM registrado en BD aún.")
-            logger.info("Inicia sesión en la app Android física para que registre su token mediante POST /api/auth/fcm-token")
+            logger.info("Inicia sesión en la app física para que registre su token mediante POST /api/auth/fcm-token")
     
     probar_despacho_cola()

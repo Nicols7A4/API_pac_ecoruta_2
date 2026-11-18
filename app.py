@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -52,17 +52,21 @@ def create_app(_test_config=None) -> FastAPI:
         return error_response("Error interno del servidor", 500)
 
     @api.get("/", include_in_schema=False)
-    def health():
+    def health(request: Request):
+        accept = request.headers.get("accept", "")
+        if "text/html" in accept:
+            return RedirectResponse(url="/supervision")
         return success_response(
             {"app": "EcoRuta API REST", "framework": "FastAPI"}, "API disponible"
         )
 
     @api.get("/supervision", include_in_schema=False)
+    @api.get("/supervision/", include_in_schema=False)
     def supervision():
         return FileResponse(
             os.path.join(web_dir, "index.html"),
             headers={
-                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
                 "Pragma": "no-cache",
                 "Expires": "0",
             },

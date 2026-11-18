@@ -56,7 +56,12 @@
   padding: 0;
 }
 
-[hidden], .app-container[hidden], .login-container[hidden], .modal-overlay[hidden], .lightbox-overlay[hidden] {
+[hidden], .app-container[hidden], .login-container[hidden], .modal-overlay[hidden], .lightbox-overlay[hidden], #login[hidden], #loginView[hidden], section#login {
+  display: none !important;
+}
+
+/* Compatibilidad si Safari carga HTML antiguo en caché */
+#login, .login {
   display: none !important;
 }
 
