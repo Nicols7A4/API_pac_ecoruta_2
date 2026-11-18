@@ -224,7 +224,7 @@ def observar_ruta(
 def reabrir_ruta(
     id: int,
     body: ComentarioDTO,
-    supervisor: dict = Depends(requerir_roles("SUPERVISOR")),
+    supervisor: dict = Depends(requerir_roles("SUPERVISOR", "FISCALIZADOR")),
 ):
     service = RutaService()
     data, message, http_code = service.reabrir(

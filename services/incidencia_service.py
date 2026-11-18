@@ -151,8 +151,6 @@ class IncidenciaService:
             if not incidencia:
                 return None, "Incidencia no encontrada", 404
             actual = incidencia["estado"]
-            if actual == "RESUELTA" or (actual == "EN_REVISION" and nuevo_estado != "RESUELTA"):
-                return None, "Transición de incidencia no permitida", 409
             repo.actualizar_estado(id_incidencia, nuevo_estado, observacion or incidencia["observacion_control"])
             connection.commit()
             actualizada = repo.buscar_por_id(id_incidencia)
