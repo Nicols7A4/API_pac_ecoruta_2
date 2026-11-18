@@ -1,0 +1,1024 @@
+{
+  "info": {
+    "_postman_id": "ecoruta-api-contract-v1",
+    "name": "EcoRuta API REST - Contrato Completo",
+    "description": "Colección de EcoRuta FastAPI + MySQL. Incluye validación conforme, replay idempotente y evidencias autenticadas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5000",
+      "type": "string"
+    },
+    {
+      "key": "token_operario",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_supervisor",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_fiscalizador",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Inicio",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "1. Autenticación & FCM",
+      "item": [
+        {
+          "name": "1.1 Login Operario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.status && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token_operario', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"operario@ecoruta.pe\",\n  \"password\": \"Operario123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.2 Login Supervisor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.status && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token_supervisor', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"supervisor@ecoruta.pe\",\n  \"password\": \"Supervisor123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.3 Login Fiscalizador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.status && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token_fiscalizador', jsonData.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"fiscalizador@ecoruta.pe\",\n  \"password\": \"Fiscalizador123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.4 Registrar FCM Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcm_token\": \"fcm_sample_token_xyz_123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/fcm-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "fcm-token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "1.5 Desasociar FCM Token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/fcm-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "fcm-token"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Usuarios",
+      "item": [
+        {
+          "name": "2.1 Perfil Usuario Logueado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuario/perfil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuario",
+                "perfil"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2.2 Operarios Disponibles (Supervisor)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/operarios?fecha=2026-10-11&turno=MANANA",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "operarios"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-10-11"
+                },
+                {
+                  "key": "turno",
+                  "value": "MANANA"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Vehículos",
+      "item": [
+        {
+          "name": "3.1 Vehículos Disponibles (Supervisor)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehiculos?estado=DISPONIBLE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vehiculos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "DISPONIBLE"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Rutas",
+      "item": [
+        {
+          "name": "4.1 Listar Rutas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas?fecha=2026-10-11",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-10-11"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.2 Detalle de Ruta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.3 Puntos de una Ruta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/2/puntos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "2",
+                "puntos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.4 Asignar Operario y Vehículo (Supervisor)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_operario\": 2,\n  \"id_vehiculo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/3/asignar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "3",
+                "asignar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.5 Iniciar Ruta (Operario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/3/iniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "3",
+                "iniciar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.6 Finalizar Ruta (Operario / Supervisor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comentario\": \"Recorrido completado exitosamente\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/2/finalizar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "2",
+                "finalizar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.7 Historial de Ruta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/2/historial",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "2",
+                "historial"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.8 Observar Ruta (Fiscalizador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_fiscalizador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comentario\": \"La hora de atención del punto no coincide con la ubicación registrada\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/1/observar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "1",
+                "observar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.9 Reabrir Ruta (Supervisor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comentario\": \"Se reabre la ruta para subsanar observación\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/1/reabrir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "1",
+                "reabrir"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.10 Validar Ruta Conforme (Fiscalizador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_fiscalizador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comentario\": \"Coordenadas, tiempos y evidencias conformes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/1/validar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "1",
+                "validar"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.11 Crear Ruta (Supervisor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Estructura estándar y ruta creada\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql(true);",
+                  "    pm.expect(json.data).to.have.property(\"id\");",
+                  "    pm.expect(json.data.estado).to.eql(\"PROGRAMADA\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_supervisor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"2026-11-20\",\n  \"turno\": \"MANANA\",\n  \"puntos_ids\": [1, 2, 3, 4]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas"
+              ]
+            },
+            "description": "Crea una ruta en estado PROGRAMADA y asocia la lista de puntos de recolección en orden PENDIENTE."
+          }
+        },
+        {
+          "name": "4.12 Duplicar Ruta (Supervisor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Ruta duplicada con puntos\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql(true);",
+                  "    pm.expect(json.data).to.have.property(\"id\");",
+                  "    pm.expect(json.data.puntos_asignados).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_supervisor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"2026-11-21\",\n  \"turno\": \"TARDE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/1/duplicar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "1",
+                "duplicar"
+              ]
+            },
+            "description": "Duplica la ruta indicada con su secuencia de puntos para una nueva fecha/turno."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Puntos & Atención",
+      "item": [
+        {
+          "name": "5.1 Buscar Punto por QR",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/puntos/PTO-006?id_ruta=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "puntos",
+                "PTO-006"
+              ],
+              "query": [
+                {
+                  "key": "id_ruta",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.2 Atender Punto (Transaccional + Idempotencia)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uuid_operacion\": \"4f2b8c1e-9d4a-4c55-8a1b-6d7e2f0a9b99\",\n  \"codigo_qr\": \"PTO-006\",\n  \"latitud\": -6.77108,\n  \"longitud\": -79.84300,\n  \"fecha_atencion\": \"2026-10-11T07:48:00\",\n  \"observacion\": \"Contenedor lleno y limpio\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ruta-puntos/6/atender",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ruta-puntos",
+                "6",
+                "atender"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.3 Catálogo de Puntos (Activos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Retorna lista de puntos activos\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql(true);",
+                  "    pm.expect(Array.isArray(json.data)).to.eql(true);",
+                  "    pm.expect(json.data.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_supervisor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/puntos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "puntos"
+              ]
+            },
+            "description": "Obtiene todos los puntos de recolección activos para asignación o consulta."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Incidencias",
+      "item": [
+        {
+          "name": "6.1 Registrar Incidencia JSON sin foto (Operario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uuid_operacion\": \"5f2b8c1e-9d4a-4c55-8a1b-6d7e2f0a9b88\",\n  \"tipo\": \"ACCESO_BLOQUEADO\",\n  \"descripcion\": \"Acceso temporalmente bloqueado\",\n  \"es_critica\": true,\n  \"fecha_captura\": \"2026-10-11T07:50:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ruta-puntos/7/incidencias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ruta-puntos",
+                "7",
+                "incidencias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.1b Registrar Incidencia Multipart con Foto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_operario}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "uuid_operacion",
+                  "value": "6f2b8c1e-9d4a-4c55-8a1b-6d7e2f0a9b77",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo",
+                  "value": "CONTENEDOR_DANADO",
+                  "type": "text"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Tapa rota con evidencia",
+                  "type": "text"
+                },
+                {
+                  "key": "es_critica",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "fecha_captura",
+                  "value": "2026-10-11T07:51:00",
+                  "type": "text"
+                },
+                {
+                  "key": "foto",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ruta-puntos/7/incidencias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ruta-puntos",
+                "7",
+                "incidencias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.2 Listar Incidencias de una Ruta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/rutas/2/incidencias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "rutas",
+                "2",
+                "incidencias"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.3 Cambiar Estado Incidencia (Supervisor / Fiscalizador)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_REVISION\",\n  \"observacion\": \"Se coordina cambio de contenedor con cuadrilla\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/incidencias/1/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "incidencias",
+                "1",
+                "estado"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Supervisión",
+      "item": [
+        {
+          "name": "7.1 Resumen KPIs de Operación (Supervisor/Fiscalizador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_supervisor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/supervision/resumen?fecha=2026-10-11",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "supervision/resumen"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-10-11"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

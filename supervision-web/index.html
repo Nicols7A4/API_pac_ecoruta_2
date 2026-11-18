@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoRuta · Centro de Supervisión y Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/supervision-assets/styles.css?v=20261118_3">
+</head>
+<body>
+
+  <!-- ================= PANTALLA DE LOGIN ================= -->
+  <section id="loginView" class="login-container">
+    <div class="login-backdrop"></div>
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="brand-icon">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/>
+            <path d="M11 19h8.2a1.8 1.8 0 0 0 1.57-.88 1.78 1.78 0 0 0 .004-1.78L17 9.5"/>
+            <path d="M11 5h2a2 2 0 0 1 2 2v1"/>
+            <path d="M12 2v3"/>
+            <path d="m14 14-2-2-2 2"/>
+            <path d="M12 12v6"/>
+          </svg>
+        </div>
+        <h1>EcoRuta</h1>
+        <span class="badge-role">Consola de Supervisión · Reto R5</span>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="correo">Correo Institucional</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input id="correo" type="email" placeholder="supervisor@ecoruta.pe" value="supervisor@ecoruta.pe" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input id="password" type="password" placeholder="••••••••••••" value="Supervisor123" required autocomplete="current-password">
+            <button type="button" id="togglePasswordBtn" class="btn-toggle-pw" title="Mostrar/ocultar contraseña">
+              <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" id="btnFillDemo" class="btn-demo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m13 2-2 2.5h3L11 9l4.5-1.5-2 4.5 4.5-2L15 17l4.5-2.5"/></svg>
+          Autocompletar Supervisor Demo
+        </button>
+
+        <button type="submit" id="btnLoginSubmit" class="btn-primary btn-block">
+          <span>Ingresar al Sistema</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+
+        <div id="loginError" class="alert-error" hidden></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= APLICACIÓN PRINCIPAL ================= -->
+  <div id="appView" class="app-container" hidden>
+
+    <!-- HEADER / NAVEGACIÓN PRINCIPAL -->
+    <header class="main-header">
+      <div class="header-left">
+        <div class="app-logo">
+          <div class="logo-circle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 19H4.8a1.8 1.8 0 0 1-1.6-.9 1.8 1.8 0 0 1 0-1.8L7.2 9.5"/><path d="M11 19h8.2a1.8 1.8 0 0 0 1.6-.9 1.8 1.8 0 0 0 0-1.8L17 9.5"/><path d="M11 5h2a2 2 0 0 1 2 2v1"/><path d="M12 2v3"/><path d="m14 14-2-2-2 2"/><path d="M12 12v6"/></svg>
+          </div>
+          <div class="logo-text">
+            <strong>EcoRuta</strong>
+            <span>Supervisión Central</span>
+          </div>
+        </div>
+
+        <!-- PESTAÑAS DE NAVEGACIÓN -->
+        <nav class="nav-tabs">
+          <button class="nav-tab active" data-tab="dashboard">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <span>Dashboard</span>
+          </button>
+          <button class="nav-tab" data-tab="mapa">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+            <span>Monitoreo en Mapa</span>
+          </button>
+          <button class="nav-tab" data-tab="rutas">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+            <span>Control de Rutas</span>
+          </button>
+          <button class="nav-tab" data-tab="incidencias">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Incidencias</span>
+            <span id="incidenciasPill" class="tab-badge" hidden>0</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="header-right">
+        <!-- MONITOR EN VIVO Y REFRESH -->
+        <div class="live-status">
+          <span class="live-dot"></span>
+          <span id="liveText" class="live-label">En vivo</span>
+        </div>
+
+        <button id="btnRefresh" class="btn-icon" title="Refrescar datos ahora">
+          <svg class="spin-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        </button>
+
+        <div class="user-pill">
+          <div class="user-avatar" id="userInitial">S</div>
+          <div class="user-info">
+            <span id="userName" class="user-name">Supervisor</span>
+            <span class="user-role">SUPERVISOR</span>
+          </div>
+          <button id="btnLogout" class="btn-logout" title="Cerrar sesión">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- BARRA DE FILTROS GLOBALES -->
+    <div class="filters-bar">
+      <div class="filters-group">
+        <div class="filter-item">
+          <label for="filtroFecha">Fecha de Operación</label>
+          <div class="input-with-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <input type="date" id="filtroFecha">
+          </div>
+        </div>
+
+        <div class="filter-item">
+          <label for="filtroEstado">Estado de Ruta</label>
+          <select id="filtroEstado">
+            <option value="">Todos los Estados</option>
+            <option value="EN_CURSO">En Curso (Activas)</option>
+            <option value="PROGRAMADA">Programadas</option>
+            <option value="FINALIZADA">Finalizadas</option>
+            <option value="OBSERVADA">Observadas</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label for="filtroBuscar">Buscar</label>
+          <div class="input-with-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="filtroBuscar" placeholder="Código, Operario, Placa...">
+          </div>
+        </div>
+      </div>
+
+      <div class="filters-actions">
+        <button id="btnVerTodasFechas" class="btn-subtle" title="Remover filtro de fecha y mostrar todo">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <span>Ver Todas las Fechas</span>
+        </button>
+        <span id="syncTimestamp" class="sync-time">Sincronizando...</span>
+      </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DE CONTENIDOS -->
+    <main class="main-content">
+
+      <!-- ================= TAB 1: DASHBOARD ================= -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <!-- TARJETAS DE KPIS SIMÉTRICAS -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-primary">
+            <div class="kpi-head">
+              <span class="kpi-label">Rutas Totales</span>
+              <div class="kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+              </div>
+            </div>
+            <div class="kpi-body">
+              <h2 id="kpiRutasTotal">0</h2>
+              <span class="kpi-trend" id="kpiRutasEnCurso">0 en curso ahora</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-success">
+            <div class="kpi-head">
+              <span class="kpi-label">Puntos Atendidos</span>
+              <div class="kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+            </div>
+            <div class="kpi-body">
+              <h2 id="kpiPuntosAtendidos">0</h2>
+              <span class="kpi-trend text-success" id="kpiPuntosPorcentaje">0% de cumplimiento</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-warning">
+            <div class="kpi-head">
+              <span class="kpi-label">Puntos Pendientes</span>
+              <div class="kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+            </div>
+            <div class="kpi-body">
+              <h2 id="kpiPuntosPendientes">0</h2>
+              <span class="kpi-trend" id="kpiPuntosSub">Por recolectar</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-danger">
+            <div class="kpi-head">
+              <span class="kpi-label">Incidencias Abiertas</span>
+              <div class="kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+            </div>
+            <div class="kpi-body">
+              <h2 id="kpiIncidenciasAbiertas">0</h2>
+              <span class="kpi-trend text-danger" id="kpiIncidenciasCriticas">0 críticas</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN DE 2 COLUMNAS SIMÉTRICAS -->
+        <div class="dashboard-columns">
+          <!-- COLUMNA IZQUIERDA: AVANCE DE RUTAS ACTIVAS -->
+          <div class="content-card">
+            <div class="card-header">
+              <div>
+                <h3>Rutas en Operación</h3>
+                <p>Progreso en tiempo real de cuadrillas y vehículos asignados</p>
+              </div>
+              <button class="btn-link" onclick="app.setTab('rutas')">Ver todas →</button>
+            </div>
+            <div id="dashboardRutasList" class="dashboard-routes-list">
+              <!-- Render dinámico -->
+            </div>
+          </div>
+
+          <!-- COLUMNA DERECHA: DISTRIBUCIÓN OPERATIVA Y RESUMEN -->
+          <div class="content-card">
+            <div class="card-header">
+              <div>
+                <h3>Estado Operativo General</h3>
+                <p>Distribución de rutas y control de fiscalización</p>
+              </div>
+            </div>
+            
+            <div class="status-summary-box">
+              <div class="progress-bar-overall">
+                <div class="progress-bar-head">
+                  <span>Cumplimiento del Día</span>
+                  <strong id="dashboardAvancePorcentaje">0%</strong>
+                </div>
+                <div class="progress-track">
+                  <div id="dashboardAvanceBar" class="progress-fill" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <div class="status-chips-grid">
+                <div class="status-chip chip-programada">
+                  <span class="chip-count" id="chipProgramadas">0</span>
+                  <span class="chip-label">Programadas</span>
+                </div>
+                <div class="status-chip chip-encurso">
+                  <span class="chip-count" id="chipEnCurso">0</span>
+                  <span class="chip-label">En Curso</span>
+                </div>
+                <div class="status-chip chip-finalizada">
+                  <span class="chip-count" id="chipFinalizadas">0</span>
+                  <span class="chip-label">Finalizadas</span>
+                </div>
+                <div class="status-chip chip-observada">
+                  <span class="chip-count" id="chipObservadas">0</span>
+                  <span class="chip-label">Observadas</span>
+                </div>
+              </div>
+
+              <div class="fiscalizacion-banner">
+                <div class="banner-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </div>
+                <div class="banner-content">
+                  <h4>Control de Fiscalización</h4>
+                  <p id="fiscalizacionTexto">0 rutas listas para revisión · 0 conformes · 0 con observación</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: MONITOREO EN MAPA ================= -->
+      <section id="tab-mapa" class="tab-pane">
+        <div class="map-workspace">
+          <!-- BARRA FLOTANTE DE CONTROL DEL MAPA -->
+          <div class="map-floating-bar">
+            <div class="map-controls-group">
+              <label for="mapRutaSelect">Filtrar por Ruta:</label>
+              <select id="mapRutaSelect">
+                <option value="0">Ver Todas las Rutas y Puntos</option>
+              </select>
+            </div>
+
+            <div class="map-legend">
+              <span class="legend-item"><span class="legend-dot dot-green"></span> Atendido</span>
+              <span class="legend-item"><span class="legend-dot dot-orange"></span> Con Incidencia</span>
+              <span class="legend-item"><span class="legend-dot dot-red"></span> Pendiente</span>
+            </div>
+
+            <button id="btnRecenterMap" class="btn-subtle" title="Re-centrar mapa en Chiclayo">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/></svg>
+              <span>Centrar Mapa</span>
+            </button>
+          </div>
+
+          <!-- CONTENEDOR LEAFLET -->
+          <div id="fullMap" class="full-map-container"></div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: CONTROL DE RUTAS ================= -->
+      <section id="tab-rutas" class="tab-pane">
+        <div class="routes-workspace">
+          <!-- LISTA DE RUTAS (COLUMNA IZQUIERDA) -->
+          <aside class="routes-sidebar content-card">
+            <div class="sidebar-head">
+              <h3>Listado de Rutas</h3>
+              <span id="routesCountBadge" class="counter-badge">0</span>
+            </div>
+            <div id="rutasContainer" class="routes-scroll-list">
+              <!-- Render dinámico de rutas -->
+            </div>
+          </aside>
+
+          <!-- DETALLE DE RUTA SELECCIONADA (COLUMNA DERECHA) -->
+          <article class="route-inspector content-card">
+            <div id="inspectorEmpty" class="inspector-empty">
+              <div class="empty-art">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>
+              </div>
+              <h4>Selecciona una ruta</h4>
+              <p>Haz clic en cualquier ruta de la lista para ver sus puntos secuenciales, operario, vehículo y avance.</p>
+            </div>
+
+            <div id="inspectorContent" class="inspector-detail" hidden>
+              <!-- CABECERA DE LA RUTA -->
+              <div class="inspector-header">
+                <div>
+                  <div class="inspector-title-row">
+                    <h2 id="inspCodigo">RUT-001</h2>
+                    <span id="inspEstadoBadge" class="badge">PROGRAMADA</span>
+                  </div>
+                  <p id="inspMetaInfo" class="inspector-subtitle">2026-11-18 · Turno Mañana · Sin Operario</p>
+                </div>
+                <div class="inspector-actions">
+                  <button id="btnVerEnMapaRuta" class="btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+                    <span>Ver en Mapa</span>
+                  </button>
+                  <button id="btnHistorialRuta" class="btn-subtle" title="Ver historial de cambios">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                    <span>Historial</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- DATOS RÁPIDOS DEL SERVICIO -->
+              <div class="inspector-grid-info">
+                <div class="info-block">
+                  <span class="info-label">Operario a Cargo</span>
+                  <strong id="inspOperarioNombre">Luis Operario</strong>
+                </div>
+                <div class="info-block">
+                  <span class="info-label">Vehículo Asignado</span>
+                  <strong id="inspVehiculoPlaca">ABC-123 (Camión)</strong>
+                </div>
+                <div class="info-block">
+                  <span class="info-label">Avance Operativo</span>
+                  <strong id="inspAvanceText">0%</strong>
+                </div>
+                <div class="info-block">
+                  <span class="info-label">Puntos Totales</span>
+                  <strong id="inspPuntosConteo">0 / 0</strong>
+                </div>
+              </div>
+
+              <!-- MINI MAPA DE LA RUTA -->
+              <div id="inspectorMiniMap" class="inspector-mini-map"></div>
+
+              <!-- PESTAÑAS DEL INSPECTOR: PUNTOS VS INCIDENCIAS -->
+              <div class="inspector-tabs">
+                <button class="insp-subtab active" data-subtab="puntos">Puntos de Recolección (<span id="countSubtabPuntos">0</span>)</button>
+                <button class="insp-subtab" data-subtab="incidencias">Incidencias en Ruta (<span id="countSubtabIncidencias">0</span>)</button>
+              </div>
+
+              <!-- LISTADO DE PUNTOS -->
+              <div id="inspSubtabPuntos" class="subtab-pane active">
+                <div id="inspPuntosTimeline" class="timeline-container">
+                  <!-- Render dinámico -->
+                </div>
+              </div>
+
+              <!-- LISTADO DE INCIDENCIAS DE LA RUTA -->
+              <div id="inspSubtabIncidencias" class="subtab-pane">
+                <div id="inspIncidenciasList" class="incidents-mini-grid">
+                  <!-- Render dinámico -->
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: GESTIÓN DE INCIDENCIAS ================= -->
+      <section id="tab-incidencias" class="tab-pane">
+        <div class="incidents-page-container">
+          <div class="content-card">
+            <div class="card-header">
+              <div>
+                <h3>Centro de Resolución de Incidencias</h3>
+                <p>Reportes generados por los operarios en campo para su evaluación y cambio de estado</p>
+              </div>
+              <div class="incidents-filter-pills">
+                <button class="filter-pill active" data-inc-filter="TODAS">Todas</button>
+                <button class="filter-pill" data-inc-filter="ABIERTA">Abiertas</button>
+                <button class="filter-pill" data-inc-filter="EN_REVISION">En Revisión</button>
+                <button class="filter-pill" data-inc-filter="RESUELTA">Resueltas</button>
+              </div>
+            </div>
+
+            <div id="incidenciasGrid" class="incidents-card-grid">
+              <!-- Render dinámico de incidencias -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= MODAL: GESTIONAR / RESOLVER INCIDENCIA ================= -->
+  <div id="modalGestionarIncidencia" class="modal-overlay" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3 id="modalIncTitulo">Gestionar Incidencia #0</h3>
+          <span id="modalIncSub" class="modal-subtitle">Cambio de estado y resolución</span>
+        </div>
+        <button class="btn-close-modal" onclick="app.closeModal('modalGestionarIncidencia')">✕</button>
+      </div>
+
+      <form id="formGestionarIncidencia" class="modal-body">
+        <input type="hidden" id="modalIncId">
+
+        <div class="form-group">
+          <label>Nuevo Estado</label>
+          <select id="modalIncEstado" required>
+            <option value="EN_REVISION">EN_REVISION · Poner en evaluación</option>
+            <option value="RESUELTA">RESUELTA · Incidencia solucionada</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Comentario / Observación Técnica (Obligatorio)</label>
+          <textarea id="modalIncComentario" rows="3" placeholder="Detalle la solución aplicada o la justificación técnica..." required></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-subtle" onclick="app.closeModal('modalGestionarIncidencia')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: HISTORIAL DE RUTA ================= -->
+  <div id="modalHistorial" class="modal-overlay" hidden>
+    <div class="modal-card modal-lg">
+      <div class="modal-head">
+        <div>
+          <h3 id="modalHistTitulo">Historial de Auditoría</h3>
+          <span class="modal-subtitle">Registro de transiciones y cambios de estado</span>
+        </div>
+        <button class="btn-close-modal" onclick="app.closeModal('modalHistorial')">✕</button>
+      </div>
+      <div id="modalHistorialBody" class="modal-body timeline-history">
+        <!-- Render dinámico -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: LIGHTBOX / ZOOM DE FOTO ================= -->
+  <div id="modalLightbox" class="lightbox-overlay" hidden onclick="app.closeLightbox()">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+      <button class="lightbox-close" onclick="app.closeLightbox()">✕</button>
+      <img id="lightboxImg" src="" alt="Evidencia de Incidencia">
+      <p id="lightboxCaption" class="lightbox-caption"></p>
+    </div>
+  </div>
+
+  <!-- SCRIPTS EXTERNOS & LÓGICA -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/supervision-assets/app.js?v=20261118_3"></script>
+</body>
+</html>

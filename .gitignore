@@ -1,0 +1,11 @@
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+.idea/
+.vscode/
+uploads/incidencias/*
+!uploads/incidencias/inc_4_bf6103.jpg
+ecoruta-pac-fireb-firebase-adminsdk-fbsvc-6966da4a33.json

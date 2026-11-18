@@ -1,0 +1,119 @@
+### 0. Healthcheck
+GET http://127.0.0.1:5000/
+###
+GET http://0.0.0.0:5000/
+
+### 1.1 Login Operario
+# @name loginOperario
+POST http://0.0.0.0:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "operario@ecoruta.pe",
+  "password": "Operario123"
+}
+
+### 1.1 Login Operario
+# @name loginOperario
+POST http://127.0.0.1:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "operario@ecoruta.pe",
+  "password": "Operario123"
+}
+
+### 1.2 Login Supervisor
+# @name loginSupervisor
+POST http://127.0.0.1:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "supervisor@ecoruta.pe",
+  "password": "Supervisor123"
+}
+
+### 1.3 Login Fiscalizador
+# @name loginFiscalizador
+POST http://127.0.0.1:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "correo": "fiscalizador@ecoruta.pe",
+  "password": "Fiscalizador123"
+}
+
+### Variables para tokens (actualizar con el token recibido del login)
+@token_op = {{loginOperario.response.body.data.token}}
+@token_sup = {{loginSupervisor.response.body.data.token}}
+@token_fisc = {{loginFiscalizador.response.body.data.token}}
+
+### 2. Perfil Usuario
+GET http://127.0.0.1:8000/api/usuario/perfil
+Authorization: Bearer {{token_op}}
+
+### 3. Listar Rutas
+GET http://127.0.0.1:8000/api/rutas?fecha=2026-10-11
+Authorization: Bearer {{token_sup}}
+
+### 4. Detalle de Ruta
+GET http://127.0.0.1:8000/api/rutas/2
+Authorization: Bearer {{token_sup}}
+
+### 5. Puntos de una Ruta
+GET http://127.0.0.1:8000/api/rutas/2/puntos
+Authorization: Bearer {{token_op}}
+
+### 6. Buscar Punto por QR
+GET http://127.0.0.1:8000/api/puntos/PTO-006?id_ruta=2
+Authorization: Bearer {{token_op}}
+
+### 7. Atender Punto (Transaccional)
+POST http://127.0.0.1:8000/api/ruta-puntos/6/atender
+Authorization: Bearer {{token_op}}
+Content-Type: application/json
+
+{
+  "uuid_operacion": "3f2b8c1e-9d4a-4c55-8a1b-6d7e2f0a9b11",
+  "codigo_qr": "PTO-006",
+  "latitud": -6.77108,
+  "longitud": -79.84300,
+  "fecha_atencion": "2026-10-11T07:48:00",
+  "observacion": "Contenedor lleno"
+}
+
+### 8. Registrar Incidencia
+POST http://127.0.0.1:8000/api/ruta-puntos/7/incidencias
+Authorization: Bearer {{token_op}}
+Content-Type: application/json
+
+{
+  "uuid_operacion": "5f2b8c1e-9d4a-4c55-8a1b-6d7e2f0a9b88",
+  "tipo": "ACCESO_BLOQUEADO",
+  "descripcion": "Acceso bloqueado temporalmente",
+  "es_critica": true,
+  "fecha_captura": "2026-10-11T07:50:00"
+}
+
+### 8b. Validar Ruta Conforme
+POST http://127.0.0.1:8000/api/rutas/1/validar
+Authorization: Bearer {{token_fis}}
+Content-Type: application/json
+
+{"comentario": "Coordenadas, tiempos y evidencias conformes"}
+
+### 9. Incidencias de una Ruta
+GET http://127.0.0.1:8000/api/rutas/2/incidencias
+Authorization: Bearer {{token_sup}}
+
+### 10. Resumen de Supervisión (KPIs)
+GET http://127.0.0.1:8000/api/supervision/resumen?fecha=2026-10-11
+Authorization: Bearer {{token_sup}}
+
+### 11. Operarios Disponibles
+GET http://127.0.0.1:8000/api/usuarios/operarios?fecha=2026-10-11&turno=MANANA
+Authorization: Bearer {{token_sup}}
+
+### 12. Vehículos Disponibles
+GET http://127.0.0.1:8000/api/vehiculos?estado=DISPONIBLE
+Authorization: Bearer {{token_sup}}
