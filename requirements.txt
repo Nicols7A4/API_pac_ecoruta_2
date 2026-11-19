@@ -9,3 +9,4 @@ werkzeug
 firebase-admin>=6.6,<8
 pytest>=8,<10
 google-auth>=2.0,<3.0
+tzdata
