@@ -41,6 +41,35 @@ function formatDate(isoStr) {
   }
 }
 
+function formatDateTime(isoStr) {
+  if (!isoStr) return 'Fecha no disponible';
+  try {
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return String(isoStr);
+    return d.toLocaleString('es-PE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return String(isoStr);
+  }
+}
+
+function getIncidentEvidenceUrl(inc) {
+  const evidence = Array.isArray(inc.evidencias) ? inc.evidencias[0] : null;
+  const raw = evidence?.url || evidence?.ruta_archivo || inc.foto_url ||
+    inc.foto_evidencia || inc.evidencia || '';
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const path = String(raw).replace(/\\/g, '/');
+  if (path.startsWith('/')) return path;
+  if (path.startsWith('uploads/')) return '/' + path;
+  return '/uploads/incidencias/' + path;
+}
+
 // ================= COMUNICACIÓN CON API REST =================
 async function api(path, options = {}) {
   const url = '/api/' + path;
@@ -181,6 +210,8 @@ function startApp() {
   $('#filtroBuscar').addEventListener('input', () => filterAndRender());
   $('#btnVerTodasFechas').addEventListener('click', () => {
     $('#filtroFecha').value = '';
+    $('#filtroEstado').value = '';
+    $('#filtroBuscar').value = '';
     refreshData(true);
   });
 
@@ -330,7 +361,11 @@ async function refreshData(showIndicator = true) {
     if (fecha) queryParams.set('fecha', fecha);
 
     // 1. Resumen de Supervisión
-    const resumenUrl = 'supervision/resumen' + (fecha ? '?fecha=' + fecha : '');
+    // Sin fecha, el listado muestra todas las rutas; el resumen debe usar el
+    // mismo alcance para que los KPI no se queden limitados al día actual.
+    const resumenUrl = fecha
+      ? 'supervision/resumen?fecha=' + fecha
+      : 'supervision/resumen?fecha_inicio=2000-01-01&fecha_fin=2100-12-31';
     const rutasUrl = 'rutas' + (queryParams.toString() ? '?' + queryParams.toString() : '');
 
     const [resumenData, rutasData, puntosData] = await Promise.all([
@@ -354,7 +389,6 @@ async function refreshData(showIndicator = true) {
 
     const now = new Date();
     $('#syncTimestamp').textContent = 'Sincronizado: ' + now.toLocaleTimeString();
-    $('#liveText').textContent = 'En vivo';
   } catch (err) {
     $('#syncTimestamp').textContent = 'Aviso: ' + err.message;
   } finally {
@@ -748,7 +782,10 @@ function renderIncidents(statusFilter = 'TODAS') {
 
   container.innerHTML = list.map((inc) => {
     const isCritica = inc.es_critica || inc.tipo === 'CONTENEDOR_DANADO' || inc.tipo === 'ZONA_INACCESIBLE';
-    const fotoUrl = inc.foto_url || inc.foto_evidencia || (inc.evidencia ? '/uploads/incidencias/' + inc.evidencia : '');
+    const fotoUrl = getIncidentEvidenceUrl(inc);
+    const fechaIncidencia = inc.fecha_registro || inc.fecha_captura || inc.fecha_hora ||
+      inc.fecha_creacion || inc.fecha;
+    const caption = `${inc.tipo || 'Incidencia'} - ${inc.descripcion || 'Evidencia fotográfica'}`;
 
     return `
       <div class="incident-card">
@@ -765,16 +802,29 @@ function renderIncidents(statusFilter = 'TODAS') {
         <p class="incident-desc">${escapeHtml(inc.descripcion)}</p>
 
         ${fotoUrl ? `
-          <div class="incident-thumb-row">
-            <img class="incident-img-thumb" src="${fotoUrl}" alt="Evidencia" onclick="app.openLightbox('${fotoUrl}', '${escapeHtml(inc.tipo)} - ${escapeHtml(inc.descripcion)}')">
-            <span style="font-size:0.78rem; color:var(--color-text-muted);">Clic para ampliar evidencia fotográfica</span>
+          <div class="incident-thumb-row incident-evidence" data-evidence-state="available">
+            <img class="incident-img-thumb"
+                 src="${escapeHtml(fotoUrl)}"
+                 alt="Evidencia fotográfica de ${escapeHtml(inc.tipo)}"
+                 data-src="${escapeHtml(fotoUrl)}"
+                 data-caption="${escapeHtml(caption)}"
+                 onclick="app.openEvidence(this)"
+                 onerror="app.handleEvidenceError(this)">
+            <span class="incident-evidence-label">Clic en la imagen para ampliarla</span>
           </div>
-        ` : ''}
+        ` : `
+          <div class="incident-thumb-row incident-evidence is-unavailable">
+            <div class="incident-img-placeholder" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            </div>
+            <span class="incident-evidence-label">Sin evidencia fotográfica registrada</span>
+          </div>
+        `}
 
         <div class="incident-meta-box">
           <span>Reportó: <b>${escapeHtml(inc.usuario?.nombre || 'Operario')}</b></span>
-          <span>Fecha: ${formatDate(inc.fecha_hora || inc.fecha_creacion || inc.fecha)}</span>
-          ${inc.observacion ? `<span style="color:var(--color-primary-dark);"><b>Resolución:</b> ${escapeHtml(inc.observacion)}</span>` : ''}
+          <span>Fecha: <b>${escapeHtml(formatDateTime(fechaIncidencia))}</b></span>
+          ${inc.observacion_control ? `<span style="color:var(--color-primary-dark);"><b>Resolución:</b> ${escapeHtml(inc.observacion_control)}</span>` : ''}
         </div>
 
         <div class="incident-card-actions">
@@ -863,6 +913,28 @@ function openLightbox(src, caption) {
   $('#modalLightbox').hidden = false;
 }
 
+function openEvidence(img) {
+  if (!img?.dataset?.src) return;
+  openLightbox(img.dataset.src, img.dataset.caption || 'Evidencia fotográfica');
+}
+
+function handleEvidenceError(img) {
+  const row = img?.closest('.incident-evidence');
+  if (!row) return;
+  img.hidden = true;
+  row.dataset.evidenceState = 'missing';
+  row.classList.add('is-unavailable');
+  if (!row.querySelector('.incident-img-placeholder')) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'incident-img-placeholder';
+    placeholder.setAttribute('aria-hidden', 'true');
+    placeholder.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 3 18 18"/><path d="m21 15-5-5-2 2"/></svg>';
+    row.insertBefore(placeholder, row.firstChild);
+  }
+  const label = row.querySelector('.incident-evidence-label');
+  if (label) label.textContent = 'Imagen no disponible en el servidor';
+}
+
 function closeLightbox() {
   $('#modalLightbox').hidden = true;
 }
@@ -875,6 +947,8 @@ window.app = {
   openGestionarModal,
   closeModal,
   openLightbox,
+  openEvidence,
+  handleEvidenceError,
   closeLightbox
 };
 

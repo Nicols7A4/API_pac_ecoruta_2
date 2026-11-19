@@ -374,38 +374,6 @@ select:focus, textarea:focus {
 }
 
 /* CONTROLES HEADER DERECHO */
-.live-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--color-primary-light);
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-}
-
-.live-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
-  animation: pulse-green 2s infinite;
-}
-
-@keyframes pulse-green {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
-}
-
-.live-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-primary-dark);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
 .btn-icon {
   width: 38px;
   height: 38px;
@@ -523,9 +491,21 @@ select:focus, textarea:focus {
   letter-spacing: 0.03em;
 }
 
+.filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 18px;
+}
+
+.filter-label svg {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
 .filter-item input,
 .filter-item select {
-  padding: 8px 12px 8px 36px;
+  padding: 8px 12px;
   font-size: 0.88rem;
   height: 38px;
 }
@@ -839,29 +819,26 @@ select:focus, textarea:focus {
 /* ================= TAB 2: MONITOREO EN MAPA ================= */
 .map-workspace {
   position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-xl);
   overflow: hidden;
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
-  height: calc(100vh - 220px);
-  min-height: 600px;
+  background: var(--color-surface);
 }
 
 .map-floating-bar {
-  position: absolute;
-  top: 18px;
-  left: 20px;
-  right: 20px;
-  z-index: 500;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: var(--radius-md);
-  padding: 12px 18px;
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: var(--shadow-elevated);
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -910,9 +887,15 @@ select:focus, textarea:focus {
 .dot-red    { background: #ef4444; }
 
 .full-map-container {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  flex: 0 0 auto;
   width: 100%;
-  height: 100%;
+  height: clamp(480px, calc(100vh - 310px), 720px);
+  min-height: 480px;
   background: #f1f5f9;
+  overflow: hidden;
 }
 
 /* ================= TAB 3: CONTROL DE RUTAS ================= */
@@ -921,6 +904,7 @@ select:focus, textarea:focus {
   grid-template-columns: 380px 1fr;
   gap: 24px;
   align-items: start;
+  min-width: 0;
 }
 
 .routes-sidebar {
@@ -1023,8 +1007,15 @@ select:focus, textarea:focus {
 
 /* INSPECTOR DE RUTA DERECHO */
 .route-inspector {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
   padding: 24px;
   min-height: 600px;
+}
+
+.inspector-detail {
+  min-width: 0;
 }
 
 .inspector-empty {
@@ -1127,11 +1118,23 @@ select:focus, textarea:focus {
 }
 
 .inspector-mini-map {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  width: 100%;
+  max-width: 100%;
   height: 240px;
+  flex: 0 0 auto;
   border-radius: var(--radius-md);
   margin: 18px 0;
   border: 1px solid var(--color-border);
   overflow: hidden;
+}
+
+.full-map-container.leaflet-container,
+.inspector-mini-map.leaflet-container {
+  max-width: 100%;
+  contain: layout paint;
 }
 
 .inspector-tabs {
@@ -1324,11 +1327,27 @@ select:focus, textarea:focus {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 74px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+}
+
+.incident-thumb-row.is-unavailable {
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+
+.incident-evidence-label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
 }
 
 .incident-img-thumb {
-  width: 58px;
-  height: 58px;
+  width: 88px;
+  height: 66px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   border: 1px solid var(--color-border);
@@ -1339,6 +1358,17 @@ select:focus, textarea:focus {
 .incident-img-thumb:hover {
   transform: scale(1.05);
   box-shadow: var(--shadow-sm);
+}
+
+.incident-img-placeholder {
+  width: 88px;
+  height: 66px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: #eef2f7;
+  color: var(--color-text-light);
 }
 
 .incident-card-actions {
@@ -1553,6 +1583,36 @@ select:focus, textarea:focus {
   }
   .filters-bar {
     padding: 14px 20px;
+  }
+  .filters-group,
+  .filter-item,
+  .filters-actions {
+    width: 100%;
+  }
+  .filter-item input,
+  .filter-item select,
+  .input-with-icon {
+    width: 100%;
+  }
+  .filters-actions {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .map-floating-bar,
+  .map-controls-group {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .map-controls-group select {
+    width: 100%;
+    min-width: 0;
+  }
+  .map-legend {
+    flex-wrap: wrap;
+  }
+  .full-map-container {
+    height: 520px;
+    min-height: 420px;
   }
   .main-content {
     padding: 0 16px 32px;
